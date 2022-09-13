@@ -326,6 +326,13 @@ export default class PlaylisterModel {
 
     addEditSongTransaction(index, newTitle, newArtist, newLink) {
         let song = this.getSong(index);
+
+        // EDGE CASE: if edited data is identical to previous data, don't log as transaction
+        // This code can easily be removed to restore pushing edit transactions that change no data
+        if (song.title == newTitle && song.artist == newArtist && song.youTubeId == newLink) {
+            return;
+        }
+
         let transaction = new EditSong_Transaction(this, index, song.title, newTitle, song.artist, newArtist, song.youTubeId, newLink);
         this.tps.addTransaction(transaction);
         this.view.updateToolbarButtons(this);
