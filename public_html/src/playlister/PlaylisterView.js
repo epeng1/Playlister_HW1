@@ -5,7 +5,7 @@
  * for loading data into our controls and building other UI controls.
  * 
  * @author McKilla Gorilla
- * @author ?
+ * @author ep1
  */
 export default class PlaylisterView {
     constructor() {}
@@ -18,9 +18,10 @@ export default class PlaylisterView {
     init() {
         // @todo - ONCE YOU IMPLEMENT THE FOOLPROOF DESIGN STUFF YOU SHOULD PROBABLY
         // START THESE BUTTONS OFF AS DISABLED
-        this.enableButton('undo-button');
-        this.enableButton('redo-button');
-        this.enableButton('close-button');
+        this.disableButton('add-song-button');
+        this.disableButton('undo-button');
+        this.disableButton('redo-button');
+        this.disableButton('close-button');
     }
 
     /*
@@ -114,8 +115,22 @@ export default class PlaylisterView {
             itemDiv.id = "playlist-card-" + (i + 1);
 
             // PUT THE CONTENT INTO THE CARD
+            let a = document.createElement('a');
             let itemText = document.createTextNode(song.title + " by " + song.artist);
-            itemDiv.appendChild(itemText);
+            a.appendChild(itemText);
+            a.title = song.title + " by " + song.artist;
+            a.target = "_blank";
+            a.href = 'https://youtube.com/watch?v=' + song.youTubeId;
+            itemDiv.appendChild(document.createTextNode(i + 1 + ". "));
+            itemDiv.appendChild(a);
+            
+            // ADD DELETE SONG BUTTON INTO CARD
+            let deleteSongButton = document.createElement("input");
+            deleteSongButton.setAttribute("type", "button");
+            deleteSongButton.setAttribute("id", "remove-song-" + (i+1));
+            deleteSongButton.setAttribute("class", "list-card-button");
+            deleteSongButton.setAttribute("value", "✕");
+            itemDiv.appendChild(deleteSongButton);
 
             // AND PUT THE CARD INTO THE UI
             itemsDiv.appendChild(itemDiv);
@@ -195,8 +210,27 @@ export default class PlaylisterView {
     */
     updateToolbarButtons(model) {
         let tps = model.tps;
+        this.disableButton("add-list-button");
+        this.disableButton("add-song-button");
+        this.disableButton("undo-button");
+        this.disableButton("redo-button");
+        this.disableButton("close-button");
+        if (model.tps.hasTransactionToUndo()) {
+            this.enableButton("undo-button");
+        }
+        if (model.tps.hasTransactionToRedo()) {
+            this.enableButton("redo-button");
+        }
+        if (model.hasCurrentList()) {
+            this.enableButton("close-button");
+            this.enableButton("add-song-button");
+        }
+        else {
+            this.enableButton("add-list-button");
+        }
         if (model.confirmDialogOpen) {
             this.disableButton("add-list-button");
+            this.disableButton("add-song-button");
             this.disableButton("undo-button");
             this.disableButton("redo-button");
             this.disableButton("close-button");

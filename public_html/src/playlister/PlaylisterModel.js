@@ -1,6 +1,9 @@
 import jsTPS from "../common/jsTPS.js";
 import Playlist from "./Playlist.js";
+import AddSong_Transaction from "./transactions/AddSong_Transaction.js";
+import EditSong_Transaction from "./transactions/EditSong_Transaction.js";
 import MoveSong_Transaction from "./transactions/MoveSong_Transaction.js";
+import RemoveSong_Transaction from "./transactions/RemoveSong_Transaction.js";
 
 /**
  * PlaylisterModel.js
@@ -15,7 +18,7 @@ import MoveSong_Transaction from "./transactions/MoveSong_Transaction.js";
  * inside the view of the page.
  * 
  * @author McKilla Gorilla
- * @author ?
+ * @author ep1
  */
 export default class PlaylisterModel {
     /*
@@ -82,6 +85,14 @@ export default class PlaylisterModel {
 
     setDeleteListId(initId) {
         this.deleteListId = initId;
+    }
+
+    getSongIndex() {
+        return this.songIndex;
+    }
+
+    setSongIndex(index) {
+        this.songIndex = index;
     }
 
     toggleConfirmDialogOpen() {
@@ -244,6 +255,37 @@ export default class PlaylisterModel {
         this.saveLists();
     }
 
+    removeSong(index) {
+        if (this.hasCurrentList) {
+            this.currentList.songs.splice(index, 1);
+            this.view.refreshPlaylist(this.currentList);
+        }
+        this.saveLists();
+    }
+
+    addSong(index, title, artist, link) {
+        if (this.hasCurrentList) {
+            let newSong = new Object();
+            newSong.title = title;
+            newSong.artist = artist;
+            newSong.youTubeId = link;
+            this.currentList.songs.splice(index, 0, newSong)
+            this.view.refreshPlaylist(this.currentList);
+        }
+        this.saveLists();
+    }
+
+    editSong(index, title, artist, link) {
+        if (this.hasCurrentList) {
+            let currentSong = this.getSong(index);
+            currentSong.title = title;
+            currentSong.artist = artist;
+            currentSong.youTubeId = link;
+            this.view.refreshPlaylist(this.currentList);
+        }
+        this.saveLists();
+    }
+
     // SIMPLE UNDO/REDO FUNCTIONS, NOTE THESE USE TRANSACTIONS
 
     undo() {
@@ -265,6 +307,26 @@ export default class PlaylisterModel {
 
     addMoveSongTransaction(fromIndex, onIndex) {
         let transaction = new MoveSong_Transaction(this, fromIndex, onIndex);
+        this.tps.addTransaction(transaction);
+        this.view.updateToolbarButtons(this);
+    }
+
+    addRemoveSongTransaction(index) {
+        let song = this.getSong(index);
+        let transaction = new RemoveSong_Transaction(this, index, song.title, song.artist, song.youTubeId);
+        this.tps.addTransaction(transaction);
+        this.view.updateToolbarButtons(this);
+    }
+
+    addAddSongTransaction() {
+        let transaction = new AddSong_Transaction(this);
+        this.tps.addTransaction(transaction);
+        this.view.updateToolbarButtons(this);
+    }
+
+    addEditSongTransaction(index, newTitle, newArtist, newLink) {
+        let song = this.getSong(index);
+        let transaction = new EditSong_Transaction(this, index, song.title, newTitle, song.artist, newArtist, song.youTubeId, newLink);
         this.tps.addTransaction(transaction);
         this.view.updateToolbarButtons(this);
     }
